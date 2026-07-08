@@ -70,7 +70,7 @@ button{
     transition:.2s;
 }
 
-button:hover{
+button:not(:disabled):hover{
     background:#125ea9;
 }
 
@@ -78,6 +78,52 @@ button:hover{
     text-align:center;
     padding:40px;
     color:#666;
+}
+
+.buttons{
+    display:flex;
+    gap:8px;
+    padding:12px;
+    background:#f7f7f7;
+}
+
+.buttons button{
+    flex:1;
+    margin:0;
+}
+
+details{
+    border-top:1px solid #ddd;
+}
+
+summary{
+    cursor:pointer;
+    padding:14px 16px;
+    font-weight:bold;
+    color:#1565c0;
+    user-select:none;
+    outline:none;
+}
+
+details pre{
+    padding-top:0;
+}
+
+.copy-all{
+    background:#1976d2;
+}
+
+.copy-head{
+    background:#43a047;
+}
+
+.copy-body{
+    background:#757575;
+}
+
+.copy-body:disabled{
+    background:#bdbdbd;
+    cursor:not-allowed;
 }
 </style>
 </head>
@@ -121,28 +167,57 @@ async function load(){
             .trim();
 
         const icon = detail.headTitle.includes("防災速報") ? "⚠️" : "🟩";
-      
-        const text=
-`${icon}${detail.headTitle}${icon}
+
+        const headerText =`${icon}${detail.headTitle}${icon}
 ${format(detail.reportDatetime)} 発表
 
-${headline}${comment ? "\n\n"+comment : ""}`;
+${headline}`;
+            
+        const fullText = headerText + (comment ? "\n\n" + comment : "");
 
         const card=document.createElement("div");
         card.className="card";
 
-        card.innerHTML=`
-            <div class="title">${escape(detail.headTitle)}</div>
-            <pre>${escape(text)}</pre>
-            <button>コピー</button>
-        `;
+card.innerHTML=`
+    <div class="title">${escape(detail.headTitle)}</div>
 
-        card.querySelector("button").onclick=async()=>{
+    <div class="buttons">
+        <button class="copy-all">全体コピー</button>
+        <button class="copy-head">見出し</button>
+        <button class="copy-body" ${comment ? "" : "disabled"}>本文</button>
+    </div>
+
+    <pre>${escape(headerText)}</pre>
+
+    ${
+        comment
+        ? `
+        <details>
+            <summary>本文を表示</summary>
+            <pre>${escape(comment)}</pre>
+        </details>
+        `
+        : ""
+    }
+`;
+
+        const btnAll = card.querySelector(".copy-all");
+        const btnHead = card.querySelector(".copy-head");
+        const btnBody = card.querySelector(".copy-body");
+        
+        async function copy(btn,text){
             await navigator.clipboard.writeText(text);
-            const b=card.querySelector("button");
-            b.textContent="コピーしました！";
-            setTimeout(()=>b.textContent="コピー",1200);
-        };
+            const before = btn.textContent;
+            btn.textContent = "コピーしました！";
+            setTimeout(()=>btn.textContent = before,1200);
+        }
+        
+        btnAll.onclick = ()=>copy(btnAll, fullText);
+        btnHead.onclick = ()=>copy(btnHead, headerText);
+        
+        if(comment){
+            btnBody.onclick = ()=>copy(btnBody, comment);
+        }
 
         cards.appendChild(card);
     }
