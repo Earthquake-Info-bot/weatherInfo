@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>気象情報ビューアー</title>
+<title>気象情報ビューアー v1.1.3</title>
 
 <style>
 *{
@@ -160,7 +160,7 @@ async function load(){
         const detail = await fetch(DENBUN + item.jsonName + ".json")
             .then(r=>r.json());
 
-        const headline=(detail.headlineText||"").trim();
+        const headline=(detail.headlineText||"").replaceAll("<br>","\n").trim();
 
         const comment=(detail.commentText||"")
             .replaceAll("<br>","\n")
